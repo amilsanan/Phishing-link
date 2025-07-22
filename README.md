@@ -8,4 +8,6 @@ when we run localhost 5000 in browser browser ask for location and webcamera acc
 
 if you want to run this out of your connection(outside of same network) use ngork and send to others
 
+this is example for datas we get in log.txt
+
 <img width="1122" height="140" alt="Image" src="https://github.com/user-attachments/assets/5b53f5f0-a837-43e4-9de9-c635d419a92d" />
